@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import json
+from PIL import Image
 from typing import Any, Dict, List, Tuple
 
 from config.constants import LAUNCHER_NAMES, SOURCE_PRIORITY
@@ -110,6 +111,16 @@ def dedupe_selected_games_by_name(
             skipped.append((game, retained))
 
     return [retained_by_name[key] for key in order], skipped
+
+def save_cover_image(image_source_path: str, game_name: str) -> str:
+    """Save the cover image to the sunshine covers directory."""
+
+    image = Image.open(image_source_path)
+    image = image.convert("P", palette=Image.ADAPTIVE, colors=256)
+    save_path = get_cover_image_path(game_name)
+    image.save(save_path, "PNG", optimize=True)
+    return save_path
+
 def get_cover_image_path(game_name: str) -> str:
     """Get the path to the cover image for a game."""
     file_name= f"{game_name.strip().lower().replace(' ', '-')}.png"

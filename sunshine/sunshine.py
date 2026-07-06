@@ -265,13 +265,14 @@ def add_game_to_sunshine_api(
     image_path: str,
     prep_cmd: Optional[List[Dict[str, str]]] = None,
     detached: Optional[List[str]] = None,
+    index: int = -1,
 ) -> None:
     """Add a game to the active server configuration using the API."""
     payload = {
         "name": game_name,
         "output": "",
         "cmd": cmd,
-        "index": -1,
+        "index": index,
         "exclude-global-prep-cmd": False,
         "elevated": False,
         "auto-detach": True,
@@ -761,7 +762,7 @@ def build_game_command(game_id: str, runner) -> Optional[str]:
         return f'{retroarch_cmd} -L "{core_path}" "{game_id}"'
     return f'flatpak run --command=bottles-cli com.usebottles.bottles run -b "{runner}" -p "{game_id}"'
 
-def add_game_to_sunshine(game_id: str, game_name: str, image_path: str, runner) -> None:
+def add_game_to_sunshine(game_id: str, game_name: str, image_path: str, runner, index: int = -1) -> None:
     """Add a game to the Sunshine configuration."""
     cmd = build_game_command(game_id, runner)
     if not cmd:
@@ -780,7 +781,7 @@ def add_game_to_sunshine(game_id: str, game_name: str, image_path: str, runner) 
     prep_cmd = get_app_prep_commands() if enable_display else []
 
     # Use the API instead of directly modifying apps.json
-    add_game_to_sunshine_api(game_name, cmd, image_path, prep_cmd=prep_cmd, detached=[])
+    add_game_to_sunshine_api(game_name, cmd, image_path, prep_cmd=prep_cmd, detached=[], index=index)
 
 def get_existing_apps() -> List[Dict]:
     """Retrieves the list of existing apps from the active server API."""

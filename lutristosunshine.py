@@ -27,6 +27,7 @@ from sunshine.sunshine import detect_sunshine_installation, detect_apollo_instal
 from utils.steamgriddb import manage_api_key, download_image_from_steamgriddb
 from config.registry import LAUNCHER_REGISTRY
 from launchers.lutris import is_lutris_running
+from launchers.steam import download_image_from_steam_cdn
 from display.manager import (
     configure_exclusive_input_devices,
     configure_gpu,
@@ -979,6 +980,32 @@ def main(argv=None):
             print(f"No new games to add to {get_server_display_name()} configuration.")
             return
 
+        update_steam_covers = args.cover or get_yes_no_input("Do you want to update Steam covers? (y/n): ")
+        api_key = manage_api_key() if update_steam_covers else None
+
+        if update_steam_covers:
+            steam_games = [
+                all_games[i]
+                for i in selected_indices
+                if all_games[i].source == "Steam" and all_games[i].game_name in existing_game_names_normalized
+            ]
+            with ThreadPoolExecutor() as executor:
+                futures = {}
+                for game_id, game_name in steam_games:
+                    futures[executor.submit(download_image_from_steam_cdn, game_id, game_name, api_key)] = (game_id, game_name)
+                
+                for future in as_completed(futures):
+                    game_id, game_name = futures[future]
+                    try:
+                        image_path = future.result()
+                        for i in list(range(len(existing_apps))):
+                            app = existing_apps[i]
+                            if app.get("name").lower() == game_name.lower() and "steam://run" in app.get("cmd"):
+                                add_game_to_sunshine(game_id, game_name, image_path, "Steam", i)
+                                break
+                    except Exception as e:
+                        print(f"Error updating Steam cover for {game_name}: {e}")
+                        
         valid_selected_games = []
         for game_id, game_name, display_source, source in selected_games:
             if display_source == "RetroArch":
@@ -1003,9 +1030,16 @@ def main(argv=None):
         with ThreadPoolExecutor() as executor:
             futures = {}
             for game_id, game_name, display_source, source in valid_selected_games:
-                if download_images and api_key:
-                    future = executor.submit(download_image_from_steamgriddb, game_name, api_key)
-                    futures[future] = (game_id, game_name, source)
+                if download_images:
+                    if source == "Steam":
+                        future = executor.submit(download_image_from_steam_cdn, game_id, game_name, api_key)
+                        futures[future] = (game_id, game_name, source)
+                    elif api_key:
+                        future = executor.submit(download_image_from_steamgriddb, game_name, api_key)
+                        futures[future] = (game_id, game_name, source)
+                    else:
+                        add_game_to_sunshine(game_id, game_name, DEFAULT_IMAGE, source)
+                        games_added = True
                 else:
                     add_game_to_sunshine(game_id, game_name, DEFAULT_IMAGE, source)
                     games_added = True

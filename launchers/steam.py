@@ -2,7 +2,7 @@ from utils.utils import get_valid_filename
 from PIL import Image
 from io import BytesIO
 import requests
-import datetime
+from datetime import datetime
 import calendar
 from config.constants import DEFAULT_IMAGE
 import os

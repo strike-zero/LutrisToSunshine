@@ -997,7 +997,7 @@ def main(argv=None):
                     image_path = future.result()
                     for i in list(range(len(existing_apps))):
                         app = existing_apps[i]
-                        if app.get("name").lower() == game_name.lower() and "steam://run" in app.get("cmd"):
+                        if app.get("name").lower() == game_name.lower():
                             add_game_to_sunshine(game_id, game_name, image_path, "Steam", i)
                             break
                     # except Exception as e:

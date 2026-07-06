@@ -976,10 +976,6 @@ def main(argv=None):
                 f"using {retained_source}."
             )
 
-        if not selected_games:
-            print(f"No new games to add to {get_server_display_name()} configuration.")
-            return
-
         update_steam_covers = args.cover or get_yes_no_input("Do you want to update Steam covers? (y/n): ")
         api_key = manage_api_key() if update_steam_covers else None
 
@@ -1005,6 +1001,10 @@ def main(argv=None):
                                 break
                     except Exception as e:
                         print(f"Error updating Steam cover for {game_name}: {e}")
+
+        if not selected_games:
+            print(f"No new games to add to {get_server_display_name()} configuration.")
+            return
                         
         valid_selected_games = []
         for game_id, game_name, display_source, source in selected_games:

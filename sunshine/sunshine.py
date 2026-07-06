@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import base64
 import requests
@@ -6,6 +7,7 @@ import getpass
 import urllib3
 import subprocess
 import shlex
+from PIL import Image
 from typing import Tuple, Optional, Dict, List
 from requests.utils import dict_from_cookiejar, cookiejar_from_dict
 from config.constants import (
@@ -187,7 +189,7 @@ def _get_apollo_process_config_root() -> Optional[str]:
 
     for pid in output.split():
         cmdline_path = f"/proc/{pid}/cmdline"
-        try:
+        try: 
             with open(cmdline_path, "rb") as cmdline_file:
                 args = [part.decode() for part in cmdline_file.read().split(b"\0") if part]
         except (OSError, UnicodeDecodeError):
@@ -233,8 +235,22 @@ def get_api_key_path():
 def get_credentials_path():
     return os.path.join(_get_config_root(), "credentials")
 
+def get_cover_image_path(game_name: str) -> str:
+    """Get the path to the cover image for a game."""
+    file_name= f"{game_name.strip().lower().replace(' ', '-')}.png"
+    file_name = re.sub(r"(?u)[^-\w.]", "", file_name)
+    if file_name in {"", ".", ".."}:
+        print(f"Could not derive file name from {game_name}")
+    return os.path.join(get_covers_path(), file_name)
 
+def save_cover_image(image_source_path: str, game_name: str) -> str:
+    """Save the cover image to the sunshine covers directory."""
 
+    image = Image.open(image_source_path)
+    image = image.convert("P", palette=Image.ADAPTIVE, colors=256)
+    save_path = get_cover_image_path(game_name)
+    image.save(save_path, "PNG", optimize=True)
+    return save_path
 
 def detect_apollo_installation() -> bool:
     """Detect if Apollo is installed (native only)."""

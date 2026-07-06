@@ -5,8 +5,8 @@ from PIL import Image
 from io import BytesIO
 from typing import Optional
 from config.constants import DEFAULT_IMAGE
-from sunshine.sunshine import get_api_key_path
-from utils.utils import handle_interrupt, get_cover_image_path
+from sunshine.sunshine import get_api_key_path, get_cover_image_path
+from utils.utils import handle_interrupt
 
 def validate_api_key(api_key: str) -> bool:
     """Validate the SteamGridDB API key."""

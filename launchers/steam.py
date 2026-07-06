@@ -158,6 +158,7 @@ def download_image_from_steam_cdn(appid: str, game_name: str, steamgriddb_api_ke
     custom_capsule_file = os.path.join(steam_root, "userdata", get_steam_id(steam_root), "config", "grid", f"{appid}p")
     custom_capsule_png = f"{custom_capsule_file}.png"
     custom_capsule_jpg = f"{custom_capsule_file}.jpg"
+    capsule_path = ''
 
     if os.path.exists(custom_capsule_png) and os.path.exists(custom_capsule_jpg):
         if os.path.getmtime(custom_capsule_png) > os.path.getmtime(custom_capsule_jpg):

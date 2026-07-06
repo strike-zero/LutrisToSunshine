@@ -983,7 +983,7 @@ def main(argv=None):
             steam_games = [
                 all_games[i]
                 for i in selected_indices
-                if all_games[i].source == "Steam" and all_games[i].game_name in existing_game_names_normalized
+                if all_games[i].source == "Steam"
             ]
             with ThreadPoolExecutor() as executor:
                 futures = {}

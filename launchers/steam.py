@@ -194,16 +194,12 @@ def download_image_from_steam_cdn(appid: str, game_name: str, steamgriddb_api_ke
     try:
         response = requests.get(url, timeout=15)
         response.raise_for_status()
-        if len(response.content) < 500:
-            return save_cover_image(capsule_path, game_name)
-
         save_path = os.path.join(get_covers_path(), get_valid_filename(game_name)+".png")
         image = Image.open(BytesIO(response.content))
-        image = image.convert("P", palette=Image.ADAPTIVE, colors=256)
         image.save(save_path, "PNG", optimize=True)
         return save_path
     except Exception:
-        return save_cover_image(capsule_path, game_name)
+        print(f"Official cover not found for {game_name}, grabbing cover from SteamGridDB")
     
     # Last resort, download from SteamGridDB
     if steamgriddb_api_key:

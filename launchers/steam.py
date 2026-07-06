@@ -204,5 +204,7 @@ def download_image_from_steam_cdn(appid: str, game_name: str, steamgriddb_api_ke
     # Last resort, download from SteamGridDB
     if steamgriddb_api_key:
         return download_image_from_steamgriddb(game_name, steamgriddb_api_key)
+    elif capsule_path:
+        return save_cover_image(capsule_path, game_name)
     else:
         return DEFAULT_IMAGE

@@ -41,13 +41,13 @@ def manage_api_key() -> Optional[str]:
     except (KeyboardInterrupt, EOFError):
         handle_interrupt()
 
-def download_image_from_steamgriddb(game_name: str, api_key: str) -> str:
+def download_image_from_steamgriddb(game_name: str, api_key: str, force_update: bool = False) -> str:
     """Download game cover image from SteamGridDB or return cached image if available."""
-    from sunshine.sunshine import get_covers_path
-    image_path = os.path.join(get_covers_path(), get_valid_filename(game_name)+".png")
+    from sunshine.sunshine import get_cover_image_path
+    image_path = get_cover_image_path(game_name)
 
-    # if os.path.exists(image_path):
-    #     return image_path
+    if os.path.exists(image_path) and not force_update:
+        return image_path
 
     headers = {"Authorization": f"Bearer {api_key}"}
     search_url = f"https://www.steamgriddb.com/api/v2/search/autocomplete/{urllib.parse.quote(game_name)}"

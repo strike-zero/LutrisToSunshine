@@ -1,4 +1,3 @@
-from utils.utils import get_valid_filename
 from PIL import Image
 from io import BytesIO
 import requests
@@ -142,13 +141,18 @@ def get_steam_command() -> str:
     else:
         return "steam"
 
-def download_image_from_steam_cdn(appid: str, game_name: str, steamgriddb_api_key: str) -> str:
+def download_image_from_steam_cdn(appid: str, game_name: str, steamgriddb_api_key: str, force_update: bool = False) -> str:
     """Download game cover image from Steam CDN, or custom cover from Steam library, with fallback to SteamGridDB."""
-    from sunshine.sunshine import save_cover_image, get_covers_path
+    from sunshine.sunshine import save_cover_image, get_cover_image_path
+    image_path = get_cover_image_path(game_name)
+
+    if os.path.exists(image_path) and not force_update:
+        return image_path
+    
     installed, installation_type = detect_steam_installation()
     if not installed:
         if steamgriddb_api_key:
-            return download_image_from_steamgriddb(game_name, steamgriddb_api_key)
+            return download_image_from_steamgriddb(game_name, steamgriddb_api_key, force_update)
         else:
             return DEFAULT_IMAGE
     
@@ -194,16 +198,15 @@ def download_image_from_steam_cdn(appid: str, game_name: str, steamgriddb_api_ke
     try:
         response = requests.get(url, timeout=15)
         response.raise_for_status()
-        save_path = os.path.join(get_covers_path(), get_valid_filename(game_name)+".png")
         image = Image.open(BytesIO(response.content))
-        image.save(save_path, "PNG", optimize=True)
-        return save_path
+        image.save(image_path, "PNG", optimize=True)
+        return image_path
     except Exception:
         print(f"Official cover not found for {game_name}, grabbing cover from SteamGridDB")
     
     # Last resort, download from SteamGridDB
     if steamgriddb_api_key:
-        return download_image_from_steamgriddb(game_name, steamgriddb_api_key)
+        return download_image_from_steamgriddb(game_name, steamgriddb_api_key, force_update)
     elif capsule_path:
         return save_cover_image(capsule_path, game_name)
     else:

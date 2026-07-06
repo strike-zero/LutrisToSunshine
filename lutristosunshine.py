@@ -989,7 +989,7 @@ def main(argv=None):
                 futures = {}
                 for game_id, game_name, display_source, source in steam_games:
                     print(f"Updating Steam cover for {game_name} ({game_id})...")
-                    futures[executor.submit(download_image_from_steam_cdn, game_id, game_name, api_key)] = (game_id, game_name)
+                    futures[executor.submit(download_image_from_steam_cdn, game_id, game_name, api_key, True)] = (game_id, game_name)
                 
                 for future in as_completed(futures):
                     game_id, game_name = futures[future]

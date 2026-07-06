@@ -238,12 +238,14 @@ def get_credentials_path():
 
 def save_cover_image(image_source_path: str, game_name: str) -> str:
     """Save the cover image to the sunshine covers directory."""
-
+    save_path = get_cover_image_path(game_name)
+    
     image = Image.open(image_source_path)
-    image = image.convert("P", palette=Image.ADAPTIVE, colors=256)
-    save_path = os.path.join(get_covers_path(), get_valid_filename(game_name)+ ".png")
     image.save(save_path, "PNG", optimize=True)
     return save_path
+
+def get_cover_image_path(game_name: str) -> str:
+    return os.path.join(get_covers_path(), get_valid_filename(game_name)+ ".png")
 
 def detect_apollo_installation() -> bool:
     """Detect if Apollo is installed (native only)."""

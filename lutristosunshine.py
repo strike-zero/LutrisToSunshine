@@ -1,3 +1,4 @@
+from sunshine.sunshine import update_game_on_sunshine_api
 import os
 import argparse
 import re
@@ -976,35 +977,45 @@ def main(argv=None):
                 f"using {retained_source}."
             )
 
-        if not selected_games:
-            print(f"No new games to add to {get_server_display_name()} configuration.")
-            return
+        update_covers = args.cover or get_yes_no_input("Do you want to update all covers? (y/n): ")
+        api_key = manage_api_key() if update_covers else None
 
-        update_steam_covers = args.cover or get_yes_no_input("Do you want to update Steam covers? (y/n): ")
-        api_key = manage_api_key() if update_steam_covers else None
-
-        if update_steam_covers:
-            steam_games = [
+        if update_covers:
+            existing_games = [
                 all_games[i]
                 for i in selected_indices
-                if all_games[i].source == "Steam" and all_games[i].game_name in existing_game_names_normalized
             ]
             with ThreadPoolExecutor() as executor:
                 futures = {}
-                for game_id, game_name in steam_games:
-                    futures[executor.submit(download_image_from_steam_cdn, game_id, game_name, api_key)] = (game_id, game_name)
+                for game_id, game_name, display_source, source in existing_games:
+                    print(f"Updating {source} cover for {game_name}...")
+                    if source == "Steam":
+                        futures[executor.submit(download_image_from_steam_cdn, game_id, game_name, api_key, True)] = (game_id, game_name, source)
+                    else:
+                        futures[executor.submit(download_image_from_steamgriddb, game_name, api_key, True)] = (game_id, game_name, source)
                 
                 for future in as_completed(futures):
-                    game_id, game_name = futures[future]
+                    game_id, game_name, source = futures[future]
                     try:
+                        is_game_found = False
                         image_path = future.result()
                         for i in list(range(len(existing_apps))):
                             app = existing_apps[i]
-                            if app.get("name").lower() == game_name.lower() and "steam://run" in app.get("cmd"):
-                                add_game_to_sunshine(game_id, game_name, image_path, "Steam", i)
+                            if app.get("name") == game_name:
+                                is_game_found = True
+                                if app.get("image-path") != image_path:
+                                    update_game_on_sunshine_api(app)
                                 break
+                        if is_game_found:
+                            print(f"Updated cover for {game_name} from {source}.")
+                        else:
+                            print(f"Could not find {game_name} to update cover.")
                     except Exception as e:
-                        print(f"Error updating Steam cover for {game_name}: {e}")
+                            print(f"Error updating {source} cover for {game_name}: {e}")
+
+        if not selected_games:
+            print(f"No new games to add to {get_server_display_name()} configuration.")
+            return
                         
         valid_selected_games = []
         for game_id, game_name, display_source, source in selected_games:

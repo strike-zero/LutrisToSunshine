@@ -63,7 +63,7 @@ def get_faugus_command() -> str:
     return "faugus-run"
 
 
-def _parse_bool(value) -> bool | None:
+def _parse_bool(value) -> Optional[bool]:
     """Parse a Faugus boolean-ish value while preserving empty as None."""
     if isinstance(value, bool):
         return value

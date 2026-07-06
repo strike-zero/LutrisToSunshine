@@ -273,6 +273,9 @@ H: Handlers=sysrq kbd event29
         original_install_udev_rule = manager._install_udev_rule
         original_cleanup_legacy_display_units = sunshine_service.cleanup_managed_overrides
         original_daemon_reload = manager._daemon_reload
+        original_sunshine_unit = sunshine_service.sunshine_unit
+        original_show_unit_property = sunshine_service.show_unit_property
+        original_sunshine_binary = sunshine_service.sunshine_binary
         try:
             manager._ensure_dependencies = lambda: []
             manager.load_state = lambda: state
@@ -283,6 +286,9 @@ H: Handlers=sysrq kbd event29
             manager._install_udev_rule = lambda current: True
             sunshine_service.cleanup_managed_overrides = lambda current: None
             manager._daemon_reload = lambda: None
+            sunshine_service.sunshine_unit = lambda: "sunshine.service"
+            sunshine_service.show_unit_property = lambda unit, prop: ""
+            sunshine_service.sunshine_binary = lambda: "/usr/bin/sunshine"
 
             result = manager.setup_display()
         finally:
@@ -295,6 +301,9 @@ H: Handlers=sysrq kbd event29
             manager._install_udev_rule = original_install_udev_rule
             sunshine_service.cleanup_managed_overrides = original_cleanup_legacy_display_units
             manager._daemon_reload = original_daemon_reload
+            sunshine_service.sunshine_unit = original_sunshine_unit
+            sunshine_service.show_unit_property = original_show_unit_property
+            sunshine_service.sunshine_binary = original_sunshine_binary
 
         self.assertEqual(result, 0)
         self.assertEqual(

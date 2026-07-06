@@ -1,3 +1,4 @@
+from utils.utils import get_valid_filename
 import os
 import requests
 import urllib.parse
@@ -5,7 +6,6 @@ from PIL import Image
 from io import BytesIO
 from typing import Optional
 from config.constants import DEFAULT_IMAGE
-from sunshine.sunshine import get_api_key_path, get_cover_image_path
 from utils.utils import handle_interrupt
 
 def validate_api_key(api_key: str) -> bool:
@@ -19,6 +19,7 @@ def validate_api_key(api_key: str) -> bool:
 
 def manage_api_key() -> Optional[str]:
     """Manage the SteamGridDB API key."""
+    from sunshine.sunshine import get_api_key_path
     try:
         if os.path.exists(get_api_key_path()):
             with open(get_api_key_path(), 'r') as file:
@@ -40,11 +41,12 @@ def manage_api_key() -> Optional[str]:
     except (KeyboardInterrupt, EOFError):
         handle_interrupt()
 
-def download_image_from_steamgriddb(game_name: str, api_key: str) -> str:
+def download_image_from_steamgriddb(game_name: str, api_key: str, force_update: bool = False) -> str:
     """Download game cover image from SteamGridDB or return cached image if available."""
+    from sunshine.sunshine import get_cover_image_path
     image_path = get_cover_image_path(game_name)
 
-    if os.path.exists(image_path):
+    if os.path.exists(image_path) and not force_update:
         return image_path
 
     headers = {"Authorization": f"Bearer {api_key}"}
@@ -74,7 +76,6 @@ def download_image_from_steamgriddb(game_name: str, api_key: str) -> str:
         image_response.raise_for_status()
 
         image = Image.open(BytesIO(image_response.content))
-        image = image.convert("P", palette=Image.ADAPTIVE, colors=256)
         image.save(image_path, "PNG", optimize=True)
 
         return image_path

@@ -1,15 +1,14 @@
 from PIL import Image
 from io import BytesIO
 import requests
-import datetime
+from datetime import datetime
 import calendar
 from config.constants import DEFAULT_IMAGE
 import os
 import re
 from typing import Tuple, List, Optional
-from utils.utils import run_command, get_cover_image_path
+from utils.utils import run_command
 from utils.steamgriddb import download_image_from_steamgriddb
-from sunshine.sunshine import save_cover_image
 
 STEAM_FLATPAK_ID = "com.valvesoftware.Steam"
 
@@ -52,7 +51,7 @@ def get_steam_id(steam_root: str) -> str:
                     current_steam64 = match.group(1)
                     
                 if '"MostRecent"' in line and '"1"' in line:
-                    return int(current_steam64) - STEAM64_BASE
+                    return f"{int(current_steam64) - STEAM64_BASE}"
 
         return '0'
     except Exception as e:
@@ -142,12 +141,18 @@ def get_steam_command() -> str:
     else:
         return "steam"
 
-def download_image_from_steam_cdn(appid: str, game_name: str, steamgriddb_api_key: str) -> str:
+def download_image_from_steam_cdn(appid: str, game_name: str, steamgriddb_api_key: str, force_update: bool = False) -> str:
     """Download game cover image from Steam CDN, or custom cover from Steam library, with fallback to SteamGridDB."""
+    from sunshine.sunshine import save_cover_image, get_cover_image_path
+    image_path = get_cover_image_path(game_name)
+
+    if os.path.exists(image_path) and not force_update:
+        return image_path
+    
     installed, installation_type = detect_steam_installation()
     if not installed:
         if steamgriddb_api_key:
-            return download_image_from_steamgriddb(game_name, steamgriddb_api_key)
+            return download_image_from_steamgriddb(game_name, steamgriddb_api_key, force_update)
         else:
             return DEFAULT_IMAGE
     
@@ -157,6 +162,7 @@ def download_image_from_steam_cdn(appid: str, game_name: str, steamgriddb_api_ke
     custom_capsule_file = os.path.join(steam_root, "userdata", get_steam_id(steam_root), "config", "grid", f"{appid}p")
     custom_capsule_png = f"{custom_capsule_file}.png"
     custom_capsule_jpg = f"{custom_capsule_file}.jpg"
+    capsule_path = ''
 
     if os.path.exists(custom_capsule_png) and os.path.exists(custom_capsule_jpg):
         if os.path.getmtime(custom_capsule_png) > os.path.getmtime(custom_capsule_jpg):
@@ -192,19 +198,16 @@ def download_image_from_steam_cdn(appid: str, game_name: str, steamgriddb_api_ke
     try:
         response = requests.get(url, timeout=15)
         response.raise_for_status()
-        if len(response.content) < 500:
-            return save_cover_image(capsule_path, game_name)
-
-        save_path = get_cover_image_path(game_name)
         image = Image.open(BytesIO(response.content))
-        image = image.convert("P", palette=Image.ADAPTIVE, colors=256)
-        image.save(save_path, "PNG", optimize=True)
-        return save_path
+        image.save(image_path, "PNG", optimize=True)
+        return image_path
     except Exception:
-        return save_cover_image(capsule_path, game_name)
+        print(f"Official cover not found for {game_name}, grabbing cover from SteamGridDB")
     
     # Last resort, download from SteamGridDB
     if steamgriddb_api_key:
-        return download_image_from_steamgriddb(game_name, steamgriddb_api_key)
+        return download_image_from_steamgriddb(game_name, steamgriddb_api_key, force_update)
+    elif capsule_path:
+        return save_cover_image(capsule_path, game_name)
     else:
         return DEFAULT_IMAGE

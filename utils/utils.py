@@ -1,3 +1,5 @@
+import re
+import os
 import subprocess
 import sys
 import json
@@ -106,3 +108,11 @@ def dedupe_selected_games_by_name(
             skipped.append((game, retained))
 
     return [retained_by_name[key] for key in order], skipped
+
+def get_valid_filename(name: str) -> str:
+    """Ensures filename is valid"""
+    file_name= name.strip().lower().replace(' ', '-')
+    file_name = re.sub(r"(?u)[^-\w.]", "", file_name)
+    if file_name in {"", ".", ".."}:
+        print(f"Could not derive file name from {name}")
+    return file_name

@@ -1,5 +1,5 @@
+from utils.utils import get_valid_filename
 import os
-import re
 import json
 import base64
 import requests
@@ -235,22 +235,16 @@ def get_api_key_path():
 def get_credentials_path():
     return os.path.join(_get_config_root(), "credentials")
 
-def get_cover_image_path(game_name: str) -> str:
-    """Get the path to the cover image for a game."""
-    file_name= f"{game_name.strip().lower().replace(' ', '-')}.png"
-    file_name = re.sub(r"(?u)[^-\w.]", "", file_name)
-    if file_name in {"", ".", ".."}:
-        print(f"Could not derive file name from {game_name}")
-    return os.path.join(get_covers_path(), file_name)
-
 def save_cover_image(image_source_path: str, game_name: str) -> str:
     """Save the cover image to the sunshine covers directory."""
-
-    image = Image.open(image_source_path)
-    image = image.convert("P", palette=Image.ADAPTIVE, colors=256)
     save_path = get_cover_image_path(game_name)
+    
+    image = Image.open(image_source_path)
     image.save(save_path, "PNG", optimize=True)
     return save_path
+
+def get_cover_image_path(game_name: str) -> str:
+    return os.path.join(get_covers_path(), get_valid_filename(game_name)+ ".png")
 
 def detect_apollo_installation() -> bool:
     """Detect if Apollo is installed (native only)."""
@@ -281,14 +275,13 @@ def add_game_to_sunshine_api(
     image_path: str,
     prep_cmd: Optional[List[Dict[str, str]]] = None,
     detached: Optional[List[str]] = None,
-    index: int = -1,
 ) -> None:
     """Add a game to the active server configuration using the API."""
     payload = {
         "name": game_name,
         "output": "",
         "cmd": cmd,
-        "index": index,
+        "index": -1,
         "exclude-global-prep-cmd": False,
         "elevated": False,
         "auto-detach": True,
@@ -304,6 +297,36 @@ def add_game_to_sunshine_api(
         print(f"Error adding {game_name} to {get_server_display_name()} via API: {error}")
     else:
         print(f"Added {game_name} to {get_server_display_name()}.")
+
+def update_game_on_sunshine_api(app: Dict) -> None:
+    name = app.get("name") or ""
+    payload = {
+        "name": name,
+        "output": app.get("output") or "",
+        "cmd": app.get("cmd") or "",
+        "index": app.get("index") or -1,
+        "exclude-global-prep-cmd": app.get("exclude-global-prep-cmd") or False,
+        "elevated": app.get("elevated") or False,
+        "auto-detach": app.get("auto-detach") or True,
+        "wait-all": app.get("wait-all") or True,
+        "exit-timeout": app.get("exit-timeout") or 5,
+        "prep-cmd": app.get("prep-cmd") or [],
+        "detached": app.get("detached") or [],
+        "image-path": app.get("image-path") or ""
+    }
+
+# not ideal but necessary to prevent unintentional duplicates or overwrites
+    existing_apps = get_existing_apps()
+    for i in range(len(existing_apps)):
+        if existing_apps[i].get("name") == app.get("name"):
+            app["index"] = i
+            break
+
+    _, error = sunshine_api_request("POST", "/api/apps", json=payload)
+    if error:
+        print(f"Error updating {name} on {get_server_display_name()} via API: {error}")
+    else:
+        print(f"Updated {name} on {get_server_display_name()}.")
 
 
 def _get_display_prep_scripts() -> set[str]:
@@ -778,7 +801,7 @@ def build_game_command(game_id: str, runner) -> Optional[str]:
         return f'{retroarch_cmd} -L "{core_path}" "{game_id}"'
     return f'flatpak run --command=bottles-cli com.usebottles.bottles run -b "{runner}" -p "{game_id}"'
 
-def add_game_to_sunshine(game_id: str, game_name: str, image_path: str, runner, index: int = -1) -> None:
+def add_game_to_sunshine(game_id: str, game_name: str, image_path: str, runner) -> None:
     """Add a game to the Sunshine configuration."""
     cmd = build_game_command(game_id, runner)
     if not cmd:
@@ -797,7 +820,7 @@ def add_game_to_sunshine(game_id: str, game_name: str, image_path: str, runner, 
     prep_cmd = get_app_prep_commands() if enable_display else []
 
     # Use the API instead of directly modifying apps.json
-    add_game_to_sunshine_api(game_name, cmd, image_path, prep_cmd=prep_cmd, detached=[], index=index)
+    add_game_to_sunshine_api(game_name, cmd, image_path, prep_cmd=prep_cmd, detached=[])
 
 def get_existing_apps() -> List[Dict]:
     """Retrieves the list of existing apps from the active server API."""
@@ -810,13 +833,28 @@ def get_existing_apps() -> List[Dict]:
     apps_list = []
     if data is not None:
         apps_list = data.get("apps", [])
+        print(f"existing apps:\n{data}")
     else:
         print(f"Warning: No data received from {get_server_display_name()} API.")
 
     if isinstance(apps_list, list):
         for app_data in apps_list:
             if isinstance(app_data, dict) and "name" in app_data:
-                existing_apps.append({"name": app_data["name"]})
+                existing_apps.append(
+                {
+                    "name": app_data.get("name") or "",
+                    "output": app_data.get("output") or "",
+                    "cmd": app_data.get("cmd") or "",
+                    "index": apps_list.index(app_data),
+                    "exclude-global-prep-cmd": app_data.get("exclude-global-prep-cmd") or False,
+                    "elevated": app_data.get("elevated") or False,
+                    "auto-detach": app_data.get("auto-detach") or True,
+                    "wait-all": app_data.get("wait-all") or True,
+                    "exit-timeout": app_data.get("exit-timeout") or 5,
+                    "prep-cmd": app_data.get("prep-cmd") or [],
+                    "detached": app_data.get("detached") or [],
+                    "image-path": app_data.get("image-path") or ""
+                })
     else:
         print("Warning: Unexpected data structure in API response.")
 

@@ -46,8 +46,8 @@ def download_image_from_steamgriddb(game_name: str, api_key: str) -> str:
     from sunshine.sunshine import get_covers_path
     image_path = os.path.join(get_covers_path(), get_valid_filename(game_name)+".png")
 
-    if os.path.exists(image_path):
-        return image_path
+    # if os.path.exists(image_path):
+    #     return image_path
 
     headers = {"Authorization": f"Bearer {api_key}"}
     search_url = f"https://www.steamgriddb.com/api/v2/search/autocomplete/{urllib.parse.quote(game_name)}"

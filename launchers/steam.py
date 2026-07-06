@@ -52,7 +52,7 @@ def get_steam_id(steam_root: str) -> str:
                     current_steam64 = match.group(1)
                     
                 if '"MostRecent"' in line and '"1"' in line:
-                    return int(current_steam64) - STEAM64_BASE
+                    return f"{int(current_steam64) - STEAM64_BASE}"
 
         return '0'
     except Exception as e:

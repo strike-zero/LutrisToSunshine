@@ -7,7 +7,7 @@ from config.constants import DEFAULT_IMAGE
 import os
 import re
 from typing import Tuple, List, Optional
-from utils.utils import run_command, get_cover_image_path
+from utils.utils import run_command
 from utils.steamgriddb import download_image_from_steamgriddb
 from sunshine.sunshine import save_cover_image
 

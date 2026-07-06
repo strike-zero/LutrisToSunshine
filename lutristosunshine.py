@@ -988,6 +988,7 @@ def main(argv=None):
             with ThreadPoolExecutor() as executor:
                 futures = {}
                 for game_id, game_name in steam_games:
+                    print(f"Updating Steam cover for {game_name} ({game_id})...")
                     futures[executor.submit(download_image_from_steam_cdn, game_id, game_name, api_key)] = (game_id, game_name)
                 
                 for future in as_completed(futures):

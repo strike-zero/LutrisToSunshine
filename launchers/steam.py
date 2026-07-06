@@ -1,3 +1,4 @@
+from utils.utils import get_valid_filename
 from PIL import Image
 from io import BytesIO
 import requests
@@ -9,7 +10,7 @@ import re
 from typing import Tuple, List, Optional
 from utils.utils import run_command
 from utils.steamgriddb import download_image_from_steamgriddb
-from sunshine.sunshine import save_cover_image
+from sunshine.sunshine import save_cover_image, get_covers_path
 
 STEAM_FLATPAK_ID = "com.valvesoftware.Steam"
 
@@ -195,7 +196,7 @@ def download_image_from_steam_cdn(appid: str, game_name: str, steamgriddb_api_ke
         if len(response.content) < 500:
             return save_cover_image(capsule_path, game_name)
 
-        save_path = get_cover_image_path(game_name)
+        save_path = os.path.join(get_covers_path(), get_valid_filename(game_name)+".png")
         image = Image.open(BytesIO(response.content))
         image = image.convert("P", palette=Image.ADAPTIVE, colors=256)
         image.save(save_path, "PNG", optimize=True)

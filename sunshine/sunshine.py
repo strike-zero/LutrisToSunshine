@@ -1,3 +1,4 @@
+from utils.utils import get_valid_filename
 import os
 import re
 import json
@@ -235,20 +236,12 @@ def get_api_key_path():
 def get_credentials_path():
     return os.path.join(_get_config_root(), "credentials")
 
-def get_cover_image_path(game_name: str) -> str:
-    """Get the path to the cover image for a game."""
-    file_name= f"{game_name.strip().lower().replace(' ', '-')}.png"
-    file_name = re.sub(r"(?u)[^-\w.]", "", file_name)
-    if file_name in {"", ".", ".."}:
-        print(f"Could not derive file name from {game_name}")
-    return os.path.join(get_covers_path(), file_name)
-
 def save_cover_image(image_source_path: str, game_name: str) -> str:
     """Save the cover image to the sunshine covers directory."""
 
     image = Image.open(image_source_path)
     image = image.convert("P", palette=Image.ADAPTIVE, colors=256)
-    save_path = get_cover_image_path(game_name)
+    save_path = os.path.join(get_covers_path(), get_valid_filename(game_name)+ ".png")
     image.save(save_path, "PNG", optimize=True)
     return save_path
 

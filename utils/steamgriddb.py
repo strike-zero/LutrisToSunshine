@@ -1,3 +1,4 @@
+from utils.utils import get_valid_filename
 import os
 import requests
 import urllib.parse
@@ -5,7 +6,7 @@ from PIL import Image
 from io import BytesIO
 from typing import Optional
 from config.constants import DEFAULT_IMAGE
-from sunshine.sunshine import get_api_key_path, get_cover_image_path
+from sunshine.sunshine import get_api_key_path, get_covers_path
 from utils.utils import handle_interrupt
 
 def validate_api_key(api_key: str) -> bool:
@@ -42,7 +43,7 @@ def manage_api_key() -> Optional[str]:
 
 def download_image_from_steamgriddb(game_name: str, api_key: str) -> str:
     """Download game cover image from SteamGridDB or return cached image if available."""
-    image_path = get_cover_image_path(game_name)
+    image_path = os.path.join(get_covers_path(), get_valid_filename(game_name)+".png")
 
     if os.path.exists(image_path):
         return image_path

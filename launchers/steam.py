@@ -10,7 +10,6 @@ import re
 from typing import Tuple, List, Optional
 from utils.utils import run_command
 from utils.steamgriddb import download_image_from_steamgriddb
-from sunshine.sunshine import save_cover_image, get_covers_path
 
 STEAM_FLATPAK_ID = "com.valvesoftware.Steam"
 
@@ -145,6 +144,7 @@ def get_steam_command() -> str:
 
 def download_image_from_steam_cdn(appid: str, game_name: str, steamgriddb_api_key: str) -> str:
     """Download game cover image from Steam CDN, or custom cover from Steam library, with fallback to SteamGridDB."""
+    from sunshine.sunshine import save_cover_image, get_covers_path
     installed, installation_type = detect_steam_installation()
     if not installed:
         if steamgriddb_api_key:

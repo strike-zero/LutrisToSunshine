@@ -993,15 +993,15 @@ def main(argv=None):
                 
                 for future in as_completed(futures):
                     game_id, game_name = futures[future]
-                    # try:
-                    image_path = future.result()
-                    for i in list(range(len(existing_apps))):
-                        app = existing_apps[i]
-                        if app.get("name").lower() == game_name.lower():
-                            add_game_to_sunshine(game_id, game_name, image_path, "Steam", i)
-                            break
-                    # except Exception as e:
-                    #     print(f"Error updating Steam cover for {game_name}: {e}")
+                    try:
+                        image_path = future.result()
+                        for i in list(range(len(existing_apps))):
+                            app = existing_apps[i]
+                            if app.get("name").lower() == game_name.lower():
+                                add_game_to_sunshine(game_id, game_name, image_path, "Steam", i)
+                                break
+                    except Exception as e:
+                        print(f"Error updating Steam cover for {game_name}: {e}")
 
         if not selected_games:
             print(f"No new games to add to {get_server_display_name()} configuration.")

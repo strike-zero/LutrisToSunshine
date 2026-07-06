@@ -1,11 +1,12 @@
 import os
 import requests
+import urllib.parse
 from PIL import Image
 from io import BytesIO
 from typing import Optional
 from config.constants import DEFAULT_IMAGE
-from sunshine.sunshine import get_api_key_path, get_covers_path
-from utils.utils import handle_interrupt
+from sunshine.sunshine import get_api_key_path
+from utils.utils import handle_interrupt, get_cover_image_path
 
 def validate_api_key(api_key: str) -> bool:
     """Validate the SteamGridDB API key."""
@@ -41,13 +42,13 @@ def manage_api_key() -> Optional[str]:
 
 def download_image_from_steamgriddb(game_name: str, api_key: str) -> str:
     """Download game cover image from SteamGridDB or return cached image if available."""
-    image_path = os.path.join(get_covers_path(), f"{game_name.lower().replace(' ', '-')}.png")
+    image_path = get_cover_image_path(game_name)
 
     if os.path.exists(image_path):
         return image_path
 
     headers = {"Authorization": f"Bearer {api_key}"}
-    search_url = f"https://www.steamgriddb.com/api/v2/search/autocomplete/{game_name}"
+    search_url = f"https://www.steamgriddb.com/api/v2/search/autocomplete/{urllib.parse.quote(game_name)}"
 
     try:
         response = requests.get(search_url, headers=headers)

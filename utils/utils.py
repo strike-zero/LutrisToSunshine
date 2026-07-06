@@ -1,3 +1,5 @@
+import re
+import os
 import subprocess
 import sys
 import json
@@ -5,6 +7,7 @@ from typing import Any, Dict, List, Tuple
 
 from config.constants import LAUNCHER_NAMES, SOURCE_PRIORITY
 from config.types import GameSelection
+from sunshine.sunshine import get_covers_path
 
 
 def handle_interrupt():
@@ -107,3 +110,11 @@ def dedupe_selected_games_by_name(
             skipped.append((game, retained))
 
     return [retained_by_name[key] for key in order], skipped
+def get_cover_image_path(game_name: str) -> str:
+    """Get the path to the cover image for a game."""
+    file_name= f"{game_name.strip().lower().replace(' ', '-')}.png"
+    file_name = re.sub(r"(?u)[^-\w.]", "", file_name)
+    if file_name in {"", ".", ".."}:
+        print(f"Could not derive file name from {game_name}")
+
+    return os.path.join(get_covers_path(), file_name)

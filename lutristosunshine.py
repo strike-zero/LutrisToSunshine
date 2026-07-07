@@ -984,7 +984,6 @@ def main(argv=None):
             existing_games = [
                 all_games[i]
                 for i in selected_indices
-                if _game_name_cache[all_games[i].game_name] in existing_game_names_normalized
             ]
             with ThreadPoolExecutor() as executor:
                 futures = {}

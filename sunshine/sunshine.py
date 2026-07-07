@@ -827,13 +827,28 @@ def get_existing_apps() -> List[Dict]:
     apps_list = []
     if data is not None:
         apps_list = data.get("apps", [])
+        print(f"existing apps:\n{apps_list}")
     else:
         print(f"Warning: No data received from {get_server_display_name()} API.")
 
     if isinstance(apps_list, list):
         for app_data in apps_list:
             if isinstance(app_data, dict) and "name" in app_data:
-                existing_apps.append({"name": app_data["name"]})
+                existing_apps.append(
+                {
+                    "name": app_data["name"],
+                    "output": app_data.get("output") or "",
+                    "cmd": app_data.get("cmd") or "",
+                    "index": app_data.get("index") or -1,
+                    "exclude-global-prep-cmd": app_data.get("exclude-global-prep-cmd") or False,
+                    "elevated": app_data.get("elevated") or False,
+                    "auto-detach": app_data.get("auto-detach") or True,
+                    "wait-all": app_data.get("wait-all") or True,
+                    "exit-timeout": app_data.get("exit-timeout") or 5,
+                    "prep-cmd": app_data.get("prep-cmd") or [],
+                    "detached": app_data.get("detached") or [],
+                    "image-path": app_data.get("image-path") or ""
+                })
     else:
         print("Warning: Unexpected data structure in API response.")
 

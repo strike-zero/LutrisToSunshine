@@ -1002,7 +1002,8 @@ def main(argv=None):
                         for i in list(range(len(existing_apps))):
                             app = existing_apps[i]
                             if app.get("name").lower() == game_name.lower():
-                                app["index"] = i
+                                if app.get("index", -1) == -1:
+                                    app["index"] = i
                                 update_game_on_sunshine_api(app)
                                 break
                     except Exception as e:

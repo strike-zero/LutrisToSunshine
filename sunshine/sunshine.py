@@ -827,7 +827,7 @@ def get_existing_apps() -> List[Dict]:
     apps_list = []
     if data is not None:
         apps_list = data.get("apps", [])
-        print(f"existing apps:\n{apps_list}")
+        print(f"existing apps:\n{data}")
     else:
         print(f"Warning: No data received from {get_server_display_name()} API.")
 

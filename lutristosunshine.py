@@ -1000,9 +1000,11 @@ def main(argv=None):
                         image_path = future.result()
                         for i in list(range(len(existing_apps))):
                             app = existing_apps[i]
-                            if app.get("name").lower() == game_name.lower():
+                            if app.get("name") == game_name:
                                 update_game_on_sunshine_api(app)
                                 break
+                            else:
+                                print(f"{game_name} not found!")
                     except Exception as e:
                             print(f"Error updating {source} cover for {game_name}: {e}")
 

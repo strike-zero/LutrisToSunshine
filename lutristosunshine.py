@@ -988,7 +988,7 @@ def main(argv=None):
             ]
             with ThreadPoolExecutor() as executor:
                 futures = {}
-                for game_id, game_name, display_source, source in existing_apps:
+                for game_id, game_name, display_source, source in all_games:
                     print(f"Updating {source} cover for {game_name}...")
                     if source == "Steam":
                         futures[executor.submit(download_image_from_steam_cdn, game_id, game_name, api_key, True)] = (game_id, game_name, source)

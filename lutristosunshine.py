@@ -981,14 +981,14 @@ def main(argv=None):
         api_key = manage_api_key() if update_covers else None
 
         if update_covers:
-            steam_games = [
+            existing_games = [
                 all_games[i]
                 for i in selected_indices
-                if all_games[i].source == "Steam"
+                if _game_name_cache[all_games[i].game_name] in existing_game_names_normalized
             ]
             with ThreadPoolExecutor() as executor:
                 futures = {}
-                for game_id, game_name, display_source, source in all_games:
+                for game_id, game_name, display_source, source in existing_games:
                     print(f"Updating {source} cover for {game_name}...")
                     if source == "Steam":
                         futures[executor.submit(download_image_from_steam_cdn, game_id, game_name, api_key, True)] = (game_id, game_name, source)

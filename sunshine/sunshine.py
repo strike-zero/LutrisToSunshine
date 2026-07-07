@@ -839,7 +839,7 @@ def get_existing_apps() -> List[Dict]:
                     "name": app_data["name"],
                     "output": app_data.get("output") or "",
                     "cmd": app_data.get("cmd") or "",
-                    "index": app_data.get("index") or -1,
+                    "index": apps_list.index(app_data),
                     "exclude-global-prep-cmd": app_data.get("exclude-global-prep-cmd") or False,
                     "elevated": app_data.get("elevated") or False,
                     "auto-detach": app_data.get("auto-detach") or True,

@@ -315,12 +315,18 @@ def update_game_on_sunshine_api(app: Dict) -> None:
         "image-path": app.get("image-path") or ""
     }
 
+# not ideal but necessary to prevent unintentional duplicates or overwrites
+    existing_apps = get_existing_apps()
+    for i in range(len(existing_apps)):
+        if existing_apps[i].get("name") == app.get("name"):
+            app["index"] = i
+            break
+
     _, error = sunshine_api_request("POST", "/api/apps", json=payload)
     if error:
         print(f"Error updating {name} on {get_server_display_name()} via API: {error}")
     else:
         print(f"Updated {name} on {get_server_display_name()}.")
-    
 
 
 def _get_display_prep_scripts() -> set[str]:
@@ -836,7 +842,7 @@ def get_existing_apps() -> List[Dict]:
             if isinstance(app_data, dict) and "name" in app_data:
                 existing_apps.append(
                 {
-                    "name": app_data["name"],
+                    "name": app_data.get("name") or "",
                     "output": app_data.get("output") or "",
                     "cmd": app_data.get("cmd") or "",
                     "index": apps_list.index(app_data),

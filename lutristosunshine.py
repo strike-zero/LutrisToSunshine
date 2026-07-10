@@ -997,14 +997,19 @@ def main(argv=None):
                 for future in as_completed(futures):
                     game_id, game_name, source = futures[future]
                     try:
+                        is_game_found = False
                         image_path = future.result()
                         for i in list(range(len(existing_apps))):
                             app = existing_apps[i]
                             if app.get("name") == game_name:
-                                update_game_on_sunshine_api(app)
+                                is_game_found = True
+                                if app.get("image-path") != image_path:
+                                    update_game_on_sunshine_api(app)
                                 break
-                            else:
-                                print(f"{game_name} not found!")
+                        if is_game_found:
+                            print(f"Updated cover for {game_name} from {source}.")
+                        else:
+                            print(f"Could not find {game_name} to update cover.")
                     except Exception as e:
                             print(f"Error updating {source} cover for {game_name}: {e}")
 
